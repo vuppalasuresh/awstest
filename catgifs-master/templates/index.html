@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>catgifs</title>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/main.css') }}">
+        <link href="https://fonts.googleapis.com/css?family=Bungee+Shade" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=PT+Sans" rel="stylesheet">
+    </head>
+    <body>
+        <header><h1>cat gifs</h1></header>
+        <section class="container">
+            <img src="{{ url }}" />
+            <p><a href="{{ url_for('index') }}">click for another one</a></p>
+        </section>
+    </body>
+</html>

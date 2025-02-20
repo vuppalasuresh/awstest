@@ -1,0 +1,33 @@
+* { margin: 0; padding: 0; }
+
+header,
+.container {
+    width: 500px;
+    margin: auto;
+}
+
+img {
+    margin-left: auto; margin-right: auto; display: block; padding-top: 20px;
+}
+
+header {
+    background: maroon;
+}
+
+header h1 {
+    padding: 20px;
+    color: white;
+    font-family: 'Bungee Shade', cursive; 
+    text-align: center;
+}
+
+.container {
+    background: pink;
+}
+
+.container p {
+    padding: 20px;
+    font-family: 'PT Sans', sans-serif;
+    text-align: center;
+    font-weight: 200;
+}
