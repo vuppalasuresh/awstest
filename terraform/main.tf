@@ -2,35 +2,15 @@ provider "aws" {
   region = "us-east-1"
 }
 
-# Create VPC
-resource "aws_vpc" "flask_vpc" {
-  cidr_block = "10.0.0.0/16"
-  enable_dns_support = true
-  enable_dns_hostnames = true
-  tags = {
-    Name = "flask-app-vpc"
-  }
-}
-
-# Create Subnet
-resource "aws_subnet" "flask_subnet" {
-  vpc_id                  = aws_vpc.flask_vpc.id
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = "us-east-1a"
-  map_public_ip_on_launch = true
-  tags = {
-    Name = "flask-app-subnet"
-  }
-}
-
 # Reference the existing ECR repository
 data "aws_ecr_repository" "my_ecr" {
-  repository_name = "my-flask-app"
+  name = "my-flask-app"  # Corrected the argument name here
 }
 
 # Create IAM role for ECS tasks to interact with ECR
 resource "aws_iam_role" "ecs_task_role" {
   name = "ecs-task-role"
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -98,10 +78,10 @@ resource "aws_ecs_task_definition" "flask_task_definition" {
 }
 
 # Create a security group for ECS tasks (allow traffic on port 80)
-resource "aws_security_group" "flask_sg" {
+resource "aws_security_group" "ecs_sg" {
   name        = "flask-app-sg"
   description = "Allow HTTP traffic on port 80"
-  vpc_id      = aws_vpc.flask_vpc.id
+  vpc_id      = "vpc-xxxxxx" # Replace with your VPC ID
 
   ingress {
     from_port   = 80
@@ -126,8 +106,8 @@ resource "aws_ecs_service" "flask_ecs_service" {
   desired_count   = 1
   launch_type     = "FARGATE"
   network_configuration {
-    subnets          = [aws_subnet.flask_subnet.id]
-    security_groups = [aws_security_group.flask_sg.id]
+    subnets          = ["subnet-xxxxxx"]  # Replace with your subnet ID
+    security_groups = [aws_security_group.ecs_sg.id]
     assign_public_ip = true
   }
 }
