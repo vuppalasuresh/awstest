@@ -43,10 +43,16 @@ resource "aws_iam_role_policy" "ecs_task_policy" {
         ]
         Effect   = "Allow"
         Resource = "arn:aws:ecr:us-east-1:058264462530:repository/my-flask-app"
+      },
+      {
+        Action   = "ecr:GetAuthorizationToken"
+        Effect   = "Allow"
+        Resource = "*"
       }
     ]
   })
 }
+
 
 # Define the ECS Cluster
 resource "aws_ecs_cluster" "flask_app_cluster" {
