@@ -19,15 +19,15 @@ jobs:
 
       - name: Login to Amazon ECR
         run: |
-          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 058264462530.dkr.ecr.us-east-1.amazonaws.com/my_ecr
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app
 
       - name: Build and Push Docker Image
         run: |
           # Navigate to the correct directory containing Dockerfile
           cd catgifs-master
           docker build -t my-flask-app .
-          docker tag my_ecr:latest 058264462530.dkr.ecr.us-east-1.amazonaws.com/my_ecr:latest
-          docker push 058264462530.dkr.ecr.us-east-1.amazonaws.com/my_ecr:latest
+          docker tag my-flask-app:latest 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app:latest
+          docker push 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app:latest
 
       - name: Install Terraform
         run: |
@@ -36,6 +36,9 @@ jobs:
           sudo apt update
           sudo apt install terraform
 
+        
+
+        
 
 
       - name: Initialize Terraform
