@@ -26,6 +26,9 @@ jobs:
           ls 
           cd ..
           pwd
+          cd test01
+          ls
+          pwd
 
       #     aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app
 
