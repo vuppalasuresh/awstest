@@ -42,7 +42,7 @@ resource "aws_iam_role_policy" "ecs_task_policy" {
           "ecr:CompleteLayerUpload"
         ]
         Effect   = "Allow"
-        Resource = data.aws_ecr_repository.my_ecr.arn
+        Resource = "*"
       }
     ]
   })
