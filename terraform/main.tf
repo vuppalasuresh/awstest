@@ -7,9 +7,45 @@ data "aws_ecr_repository" "my_ecr" {
   name = "my-flask-app"
 }
 
-# Use existing IAM role instead of creating a new one
-data "aws_iam_role" "ecs_task_role" {
+# Create IAM role for ECS tasks to interact with ECR
+resource "aws_iam_role" "ecs_task_role" {
   name = "ecs-task-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# Attach policy to the ECS task role for ECR access
+resource "aws_iam_role_policy" "ecs_task_policy" {
+  name   = "ecs-task-policy"
+  role   = aws_iam_role.ecs_task_role.name
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:PutImage",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload"
+        ]
+        Effect   = "Allow"
+        Resource = data.aws_ecr_repository.my_ecr.arn
+      }
+    ]
+  })
 }
 
 # Define the ECS Cluster
@@ -20,8 +56,8 @@ resource "aws_ecs_cluster" "flask_app_cluster" {
 # Define the ECS task definition using the Docker image from the existing ECR repository
 resource "aws_ecs_task_definition" "flask_task_definition" {
   family                   = "flask-app-task"
-  execution_role_arn       = data.aws_iam_role.ecs_task_role.arn
-  task_role_arn            = data.aws_iam_role.ecs_task_role.arn
+  execution_role_arn       = aws_iam_role.ecs_task_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = "256"
@@ -45,7 +81,7 @@ resource "aws_ecs_task_definition" "flask_task_definition" {
 resource "aws_security_group" "ecs_sg" {
   name        = "flask-app-sg"
   description = "Allow HTTP traffic on port 80"
-  vpc_id      = "vpc-0461e865c5a2055c5"  # Corrected VPC ID
+  vpc_id      = "vpc-0461e865c5a2055c5"  # Your VPC ID
 
   ingress {
     from_port   = 80
@@ -71,13 +107,20 @@ resource "aws_ecs_service" "flask_ecs_service" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = ["subnet-01b120aa2483e220a", "subnet-0f3af6c61caf61983"]  # Using correct public subnets
+    subnets          = [
+      "subnet-01b120aa2483e220a",
+      "subnet-0f3af6c61caf61983",
+      "subnet-0ac62e963c443c7b2",
+      "subnet-0fffd40e39db04651",
+      "subnet-08c72b3f56e7ff52f",
+      "subnet-0515a928de6d41455"
+    ]  # Your subnets in VPC vpc-0461e865c5a2055c5
     security_groups  = [aws_security_group.ecs_sg.id]
     assign_public_ip = true
   }
 }
 
-# Output ECS cluster and service details
+# Optional: Output ECS cluster and service details
 output "ecs_cluster_name" {
   value = aws_ecs_cluster.flask_app_cluster.name
 }
