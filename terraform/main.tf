@@ -68,17 +68,17 @@ resource "aws_ecs_cluster" "flask_app_cluster" {
   name = "flask-app-cluster"
 }
 
-# Create a new security group (restrict to specific IP range)
+# Create a new security group (allow HTTP traffic on port 5000)
 resource "aws_security_group" "ecs_sg" {
   name        = "flask-app-sg-new"
-  description = "Allow HTTP traffic on port 80"
+  description = "Allow HTTP traffic on port 5000"
   vpc_id      = "vpc-0461e865c5a2055c5"  # Your VPC ID
 
   ingress {
-    from_port   = 80
-    to_port     = 80
+    from_port   = 5000
+    to_port     = 5000
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # Allow all IPs to access port 80 (change for more restriction)
+    cidr_blocks = ["0.0.0.0/0"]  # Allow all IPs to access port 5000 (change for more restriction)
   }
 
   egress {
@@ -105,8 +105,8 @@ resource "aws_ecs_task_definition" "flask_task_definition" {
     essential = true
     portMappings = [
       {
-        containerPort = 80
-        hostPort      = 80
+        containerPort = 5000
+        hostPort      = 5000
         protocol      = "tcp"
       }
     ]
