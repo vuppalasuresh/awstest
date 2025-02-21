@@ -4,7 +4,7 @@ provider "aws" {
 
 # Reference the existing ECR repository
 data "aws_ecr_repository" "my_ecr" {
-  repository_name = "my-flask-app"
+  name = "my-flask-app"  # Corrected the argument name here
 }
 
 # Create IAM role for ECS tasks to interact with ECR
