@@ -2,6 +2,18 @@ provider "aws" {
   region = "us-east-1"
 }
 
+# Create VPC
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "main-vpc"
+  }
+}
+
 # ECS Cluster
 resource "aws_ecs_cluster" "flask_cluster" {
   name = "flask-cluster"
@@ -39,7 +51,7 @@ resource "aws_ecs_task_definition" "flask_task" {
     name      = "flask-container"
     image     = "${var.ecr_repo_url}:latest"
     essential = true
-    portMappings = [{
+    portMappings = [ {
       containerPort = 5000
       hostPort      = 5000
     }]
@@ -64,4 +76,36 @@ resource "aws_ecs_service" "flask_service" {
 # Create an ECR Repository
 resource "aws_ecr_repository" "my_ecr" {
   name = "my-flask-app"
+}
+
+# Create Public Subnet
+resource "aws_subnet" "public" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = "us-east-1a"
+  map_public_ip_on_launch = true
+  tags = {
+    Name = "public-subnet"
+  }
+}
+
+# Create Security Group for ECS
+resource "aws_security_group" "ecs_sg" {
+  name        = "ecs_security_group"
+  description = "Allow inbound traffic for ECS service"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
