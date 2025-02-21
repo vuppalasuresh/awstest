@@ -25,27 +25,15 @@ resource "aws_iam_role" "ecs_task_role" {
   })
 }
 
-# Attach policy to the ECS task role for ECR access
-resource "aws_iam_role_policy" "ecs_task_policy" {
-  name   = "ecs-task-policy"
-  role   = aws_iam_role.ecs_task_role.name
-  policy = jsonencode({
+# Create IAM policy for admin rights (full access to all AWS resources)
+resource "aws_iam_policy" "ecs_admin_policy" {
+  name        = "ecs-admin-policy"
+  description = "Admin access policy for ECS task role"
+  policy      = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Action = [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:PutImage",
-          "ecr:InitiateLayerUpload",
-          "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload"
-        ]
-        Effect   = "Allow"
-        Resource = "arn:aws:ecr:us-east-1:058264462530:repository/my-flask-app"
-      },
-      {
-        Action   = "ecr:GetAuthorizationToken"
+        Action   = "*"
         Effect   = "Allow"
         Resource = "*"
       }
@@ -53,6 +41,27 @@ resource "aws_iam_role_policy" "ecs_task_policy" {
   })
 }
 
+# Attach admin policy to the ECS task role
+resource "aws_iam_role_policy_attachment" "ecs_task_role_admin" {
+  role       = aws_iam_role.ecs_task_role.name
+  policy_arn = aws_iam_policy.ecs_admin_policy.arn
+}
+
+# Attach policy to the ECS task role for ECR access with admin rights
+resource "aws_iam_role_policy" "ecs_task_policy" {
+  name   = "ecs-task-policy"
+  role   = aws_iam_role.ecs_task_role.name
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "*"
+        Effect   = "Allow"
+        Resource = "*"
+      }
+    ]
+  })
+}
 
 # Define the ECS Cluster
 resource "aws_ecs_cluster" "flask_app_cluster" {
