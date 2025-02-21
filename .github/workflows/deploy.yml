@@ -31,17 +31,11 @@ jobs:
 
       - name: Install Terraform
         run: |
-          sudo rm -rf /usr/local/bin/terraform*
-          sudo rm -rf /usr/local/bin/terraform
-          sudo rm -rf /usr/local/bin/terraform*
-          sudo rm -rf /usr/local/bin/terraform
-          sudo rm -rf /usr/local/bin/terraform*
-          sudo find /usr/local/bin/ -name "terraform*" -exec rm -rf {} \;
-          sudo rm -rf /usr/local/bin/terraform* 
-          sudo apt-get update && sudo apt-get install -y unzip
-          unzip terraform_1.5.6_linux_amd64.zip
-          sudo mv terraform /usr/local/bin/
-          terraform -version
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
+          sudo add-apt-repository "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com stable main" && \
+          sudo apt update && \
+          sudo apt install terraform
+        
 
         
 
