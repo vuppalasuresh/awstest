@@ -42,7 +42,7 @@ resource "aws_iam_role_policy" "ecs_task_policy" {
           "ecr:CompleteLayerUpload"
         ]
         Effect   = "Allow"
-        Resource = "*"
+        Resource = data.aws_ecr_repository.my_ecr.arn
       }
     ]
   })
@@ -51,6 +51,27 @@ resource "aws_iam_role_policy" "ecs_task_policy" {
 # Define the ECS Cluster
 resource "aws_ecs_cluster" "flask_app_cluster" {
   name = "flask-app-cluster"
+}
+
+# Create a new security group (avoiding duplicates)
+resource "aws_security_group" "ecs_sg" {
+  name        = "flask-app-sg-new"  # Changed name to avoid conflict
+  description = "Allow HTTP traffic on port 80"
+  vpc_id      = "vpc-0461e865c5a2055c5"  # Your VPC ID
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 # Define the ECS task definition using the Docker image from the existing ECR repository
@@ -75,27 +96,6 @@ resource "aws_ecs_task_definition" "flask_task_definition" {
       }
     ]
   }])
-}
-
-# Create a security group for ECS tasks (allow traffic on port 80)
-resource "aws_security_group" "ecs_sg" {
-  name        = "flask-app-sg"
-  description = "Allow HTTP traffic on port 80"
-  vpc_id      = "vpc-0461e865c5a2055c5"  # Your VPC ID
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
 }
 
 # Define the ECS service to run the Flask app task in the ECS cluster
