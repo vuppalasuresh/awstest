@@ -42,7 +42,7 @@ resource "aws_iam_role_policy" "ecs_task_policy" {
           "ecr:CompleteLayerUpload"
         ]
         Effect   = "Allow"
-        Resource = data.aws_ecr_repository.my_ecr.arn
+        Resource = "arn:aws:ecr:us-east-1:058264462530:repository/my-flask-app"
       }
     ]
   })
@@ -53,9 +53,9 @@ resource "aws_ecs_cluster" "flask_app_cluster" {
   name = "flask-app-cluster"
 }
 
-# Create a new security group (avoiding duplicates)
+# Create a new security group (restrict to specific IP range)
 resource "aws_security_group" "ecs_sg" {
-  name        = "flask-app-sg-new"  # Changed name to avoid conflict
+  name        = "flask-app-sg-new"
   description = "Allow HTTP traffic on port 80"
   vpc_id      = "vpc-0461e865c5a2055c5"  # Your VPC ID
 
@@ -63,7 +63,7 @@ resource "aws_security_group" "ecs_sg" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"]  # Allow all IPs to access port 80 (change for more restriction)
   }
 
   egress {
@@ -114,10 +114,36 @@ resource "aws_ecs_service" "flask_ecs_service" {
       "subnet-0fffd40e39db04651",
       "subnet-08c72b3f56e7ff52f",
       "subnet-0515a928de6d41455"
-    ]  # Your subnets in VPC vpc-0461e865c5a2055c5
+    ]
     security_groups  = [aws_security_group.ecs_sg.id]
     assign_public_ip = true
   }
+}
+
+# CloudWatch Log Group for monitoring ECS task logs
+resource "aws_cloudwatch_log_group" "flask_log_group" {
+  name = "/ecs/flask-app-logs"
+}
+
+# CloudWatch Metric Alarm to monitor log events (threshold can be adjusted)
+resource "aws_cloudwatch_metric_alarm" "flask_log_alarm" {
+  alarm_name                = "flask-log-alarm"
+  comparison_operator       = "GreaterThanThreshold"
+  evaluation_periods        = "1"
+  metric_name               = "IncomingLogEvents"
+  namespace                 = "AWS/Logs"
+  period                    = "60"
+  statistic                 = "Sum"
+  threshold                 = "10"
+  alarm_description         = "Trigger alarm when log is written more than 10 times in a minute"
+  insufficient_data_actions = []
+
+  dimensions = {
+    LogGroupName = aws_cloudwatch_log_group.flask_log_group.name
+  }
+
+  actions_enabled = true
+  alarm_actions   = ["arn:aws:sns:us-east-1:058264462530:MySNS"]
 }
 
 # Optional: Output ECS cluster and service details
