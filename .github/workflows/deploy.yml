@@ -31,7 +31,6 @@ jobs:
 
       - name: Install Terraform
         run: |
-          ls -ld /usr/local/bin/terraform*
           sudo rm -rf /usr/local/bin/terraform*
           sudo rm -rf /usr/local/bin/terraform
           sudo rm -rf /usr/local/bin/terraform*
