@@ -34,7 +34,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y unzip
           curl -O https://releases.hashicorp.com/terraform/1.5.6/terraform_1.5.6_linux_amd64.zip
           unzip -o terraform_1.5.6_linux_amd64.zip  # The '-o' flag forces overwriting existing files
-          sudo rm -rf /usr/local/bin/terraform  # Ensure any existing terraform directory is removed
+          sudo rm -rf /usr/local/bin/terraform*  # Force remove any existing terraform file or directory
           sudo mv terraform /usr/local/bin/
           terraform -version
         
