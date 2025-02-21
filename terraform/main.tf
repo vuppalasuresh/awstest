@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 # Reference the existing ECR repository
-data "aws_ecr_repository" "my-flask-app" {
+data "aws_ecr_repository" "my_ecr" {
   repository_name = "my-flask-app"
 }
 
