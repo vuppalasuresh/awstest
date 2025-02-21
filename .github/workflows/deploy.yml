@@ -14,18 +14,18 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      # Configure AWS credentials
+      # Configure AWS credentials with hardcoded region
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
-          aws-region: ${{ secrets.aws_region }}
+          aws-region: 'eu-west-1'  # Hardcoded region
 
       # Login to Amazon ECR
       - name: Login to Amazon ECR
         run: |
-          aws ecr get-login-password --region ${{ secrets.aws_region }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REPO_URL }}
+          aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${{ secrets.ECR_REPO_URL }}
 
       # Build and push Docker image to Amazon ECR
       - name: Build and Push Docker Image
