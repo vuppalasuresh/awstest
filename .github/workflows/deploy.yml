@@ -19,60 +19,50 @@ jobs:
 
       - name: Login to Amazon ECR
         run: |
-          ls 
-          pwd
-          cd ..
-          pwd
-          ls 
-          cd ..
-          pwd
-          cd test01
-          ls
-          pwd
 
-      #     aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app
 
-      # - name: Build and Push Docker Image
-      #   run: |
-      #     # Navigate to the correct directory containing Dockerfile
-      #     cd catgifs-master
-      #     docker build -t my-flask-app .
-      #     docker tag my-flask-app:latest 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app:latest
-      #     docker push 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app:latest
+      - name: Build and Push Docker Image
+        run: |
+          # Navigate to the correct directory containing Dockerfile
+          cd catgifs-master
+          docker build -t my-flask-app .
+          docker tag my-flask-app:latest 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app:latest
+          docker push 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app:latest
 
-      # - name: Install Terraform
-      #   run: |
-      #     curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo tee /etc/apt/trusted.gpg.d/hashicorp.asc
-      #     echo "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-      #     sudo apt update
-      #     sudo apt install terraform
+      - name: Install Terraform
+        run: |
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo tee /etc/apt/trusted.gpg.d/hashicorp.asc
+          echo "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+          sudo apt update
+          sudo apt install terraform
 
-      # - name: Terraform Format Check
-      #   run: |
-      #     # Navigate to the terraform directory and check for formatting issues
-      #     cd terraform
-      #     terraform fmt -check
+      - name: Terraform Format Check
+        run: |
+          # Navigate to the terraform directory and check for formatting issues
+          cd aws_terraform
+          terraform fmt -check
 
-      # - name: Terraform Initialization
-      #   run: |
-      #     # Navigate to the terraform directory and initialize Terraform
-      #     cd terraform
-      #     terraform init
+      - name: Terraform Initialization
+        run: |
+          # Navigate to the terraform directory and initialize Terraform
+          cd aws_terraform
+          terraform init
 
-      # - name: Terraform Validate
-      #   run: |
-      #     # Validate the Terraform configuration files
-      #     cd terraform
-      #     terraform validate
+      - name: Terraform Validate
+        run: |
+          # Validate the Terraform configuration files
+          cd aws_terraform
+          terraform validate
 
-      # - name: Terraform Plan
-      #   run: |
-      #     # Generate and show the Terraform execution plan
-      #     cd terraform
-      #     terraform plan
+      - name: Terraform Plan
+        run: |
+          # Generate and show the Terraform execution plan
+          cd aws_terraform
+          terraform plan
 
-      # - name: Apply Terraform Changes
-      #   run: |
-      #     # Apply the Terraform changes automatically
-      #     cd terraform
-      #     terraform apply -auto-approve
+      - name: Apply Terraform Changes
+        run: |
+          # Apply the Terraform changes automatically
+          cd aws_terraform
+          terraform apply -auto-approve
