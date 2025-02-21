@@ -21,12 +21,12 @@ jobs:
 
       - name: Login to Amazon ECR
         run: |
-          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app
+          aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin 058264462530.dkr.ecr.us-east-1.amazonaws.com
 
       - name: Build and Push Docker Image
         run: |
           # Navigate to the correct directory containing Dockerfile
-          cd catgifs-master
+          cd awstest/catgifs-master
           docker build -t my-flask-app .
           docker tag my-flask-app:latest 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app:latest
           docker push 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app:latest
@@ -42,11 +42,11 @@ jobs:
       - name: Initialize Terraform
         run: |
           # Navigate to the terraform directory
-          cd terraform
+          cd awstest/terraform
           terraform init
 
       - name: Apply Terraform Changes
         run: |
           # Navigate to the terraform directory
-          cd terraform
+          cd awstest/terraform
           terraform apply -auto-approve
