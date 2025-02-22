@@ -228,3 +228,4 @@ output "ecs_cluster_name" {
 output "ecs_service_name" {
   value = aws_ecs_service.flask_ecs_service.name
 }
+
