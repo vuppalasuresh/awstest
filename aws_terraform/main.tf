@@ -71,12 +71,12 @@ resource "aws_route_table_association" "flask_subnet_association_2" {
 # Create a Security Group
 resource "aws_security_group" "ecs_sg" {
   name        = "flask-app-sg"
-  description = "Allow HTTP traffic on port 80"
+  description = "Allow HTTP traffic on port 5000"
   vpc_id      = aws_vpc.flask_vpc.id
 
   ingress {
-    from_port   = 80
-    to_port     = 80
+    from_port   = 5000
+    to_port     = 5000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -159,8 +159,8 @@ resource "aws_ecs_task_definition" "flask_task_definition" {
     essential = true
     portMappings = [
       {
-        containerPort = 80
-        hostPort      = 80
+        containerPort = 5000
+        hostPort      = 5000
         protocol      = "tcp"
       }
     ]
