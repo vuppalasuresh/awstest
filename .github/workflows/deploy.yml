@@ -5,7 +5,7 @@ on:
   workflow_dispatch:  # Allows manual trigger for destroy
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -28,6 +28,61 @@ jobs:
           docker build -t my-flask-app .
           docker tag my-flask-app:latest 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app:latest
           docker push 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app:latest
+ 
+          
+  Terraform_plan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app
+
+
+      - name: Install Terraform
+        run: |
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo tee /etc/apt/trusted.gpg.d/hashicorp.asc
+          echo "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+          sudo apt update
+          sudo apt install terraform
+
+      - name: Terraform Initialization
+        run: |
+          cd aws_terraform
+          terraform init
+
+      - name: Terraform Plan
+        run: |
+          cd aws_terraform
+          terraform plan -auto-approve
+
+
+  Terraform_Apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app
+
 
       - name: Install Terraform
         run: |
@@ -56,7 +111,35 @@ jobs:
         run: |
           cd tests
           python3 test_s3_configuration.py
-          
+
+  S3_validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app
+
+      - name: Install Python and Boto3
+        run: |
+          sudo apt update
+          sudo apt install python3-pip
+          pip3 install boto3
+
+      - name: Run S3 Bucket Configuration Tests
+        run: |
+          cd tests
+          python3 test_s3_configuration.py
+
   # destroy:
   #   runs-on: ubuntu-latest
   #   steps:
