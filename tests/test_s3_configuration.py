@@ -8,7 +8,7 @@ class TestS3BucketConfiguration(unittest.TestCase):
     def setUpClass(cls):
         # Initialize the S3 client in us-east-1 region
         cls.s3 = boto3.client('s3', region_name='us-east-1')
-        cls.bucket_name = 'my-9898989-123-secure-bucket-123456'
+        cls.bucket_name = 'my-9898989-1234-secure-bucket-123456'
 
     def test_bucket_exists(self):
         """Test if the bucket exists"""
