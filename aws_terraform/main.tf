@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "secure_bucket" {
-  bucket = "my-9898989secure-bucket-123456"
+  bucket = "my-9898989-123-secure-bucket-123456"
 }
 
 resource "aws_s3_bucket_public_access_block" "block_public_access" {
