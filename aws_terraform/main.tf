@@ -6,9 +6,13 @@ resource "aws_s3_bucket" "secure_bucket" {
   bucket = "my-9898989secure-bucket-123456"
 }
 
-resource "aws_s3_bucket_acl" "private_acl" {
+resource "aws_s3_bucket_public_access_block" "block_public_access" {
   bucket = aws_s3_bucket.secure_bucket.id
-  acl    = "private"
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
