@@ -20,11 +20,11 @@ class TestS3BucketConfiguration(unittest.TestCase):
         """Test if public access is blocked on the S3 bucket"""
         try:
             # Check if public access block configuration exists and is enabled
-            response = self.s3.get_bucket_acl(Bucket=self.bucket_name)
-            public_access = response.get('Grants', [])
-            # Check if no public access grants are present
-            self.assertFalse(any(grant['Grantee']['Type'] == 'CanonicalUser' for grant in public_access),
-                             "Public access is not blocked.")
+            response = self.s3.get_bucket_policy_status(Bucket=self.bucket_name)
+            public_access_block = response.get('PolicyStatus', {}).get('IsPublic', False)
+            
+            # We expect the policy to be private (IsPublic=False)
+            self.assertFalse(public_access_block, "Public access is not blocked.")
         except ClientError as e:
             self.fail(f"Error checking public access on bucket {self.bucket_name}: {e}")
 
