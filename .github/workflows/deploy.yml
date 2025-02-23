@@ -49,7 +49,7 @@ jobs:
       # Initialize Terraform in the test directory
       - name: Terraform Init (Testing)
         run: |
-          cd tests  tests
+          cd tests
           terraform init
 
       # Run the tests to validate the resources
