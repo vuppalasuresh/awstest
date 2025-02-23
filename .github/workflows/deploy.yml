@@ -46,6 +46,18 @@ jobs:
           cd aws_terraform
           terraform apply -auto-approve
 
+      # Initialize Terraform in the test directory
+      - name: Terraform Init (Testing)
+        run: |
+          cd tests  tests
+          terraform init
+
+      # Run the tests to validate the resources
+      - name: Terraform Apply (Testing)
+        run: |
+          cd tests  
+          terraform apply -auto-approve
+
   destroy:
     runs-on: ubuntu-latest
     steps:
