@@ -1,18 +1,45 @@
-check "bucket_exists" {
-  assert {
-    condition     = length(data.aws_s3_bucket.secure_bucket.id) > 0
-    error_message = "S3 bucket does not exist."
+# Test encryption for the S3 bucket
+resource "null_resource" "test_encryption" {
+  depends_on = [
+    aws_s3_bucket_server_side_encryption_configuration.encryption
+  ]
+
+  provisioner "local-exec" {
+    command = <<EOT
+      encryption_status=$(aws s3api get-bucket-encryption --bucket ${aws_s3_bucket.secure_bucket.bucket} --query 'ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault.SSEAlgorithm' --output text)
+      if [ "$encryption_status" == "AES256" ]; then
+        echo "Encryption is enabled with AES256."
+      else
+        echo "Encryption is not set to AES256."
+        exit 1
+      fi
+    EOT
   }
 }
 
-check "encryption_enabled" {
-  assert {
-    condition     = data.aws_s3_bucket.secure_bucket.server_side_encryption_configuration[0].rule[0].apply_server_side_encryption_by_default.sse_algorithm == "AES256"
-    error_message = "S3 bucket encryption is not enabled or not using AES256."
+# Test public access block for the S3 bucket
+resource "null_resource" "test_public_access_block" {
+  depends_on = [
+    aws_s3_bucket_public_access_block.block_public_access
+  ]
+
+  provisioner "local-exec" {
+    command = <<EOT
+      public_access_block=$(aws s3api get-bucket-policy-status --bucket ${aws_s3_bucket.secure_bucket.bucket} --query 'PolicyStatus.IsPublic' --output text)
+      if [ "$public_access_block" == "False" ]; then
+        echo "Public access is properly blocked."
+      else
+        echo "Public access is not blocked."
+        exit 1
+      fi
+    EOT
   }
 }
 
-# Data source to fetch bucket details for validation
-data "aws_s3_bucket" "secure_bucket" {
-  bucket = "my-9898989-123-secure-bucket-123456"
+output "test_encryption_status" {
+  value = null_resource.test_encryption.*.id
+}
+
+output "test_public_access_block_status" {
+  value = null_resource.test_public_access_block.*.id
 }
