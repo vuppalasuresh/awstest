@@ -1,11 +1,11 @@
-terraform {
-  backend "s3" {
-    bucket = "my-9898989-123-secure-bucket-123456"
-    key    = "terraform.tfstate"
-    region = "us-east-1"
-    encrypt = true
-  }
-}
+# terraform {
+#   backend "s3" {
+#     bucket = "my-9898989-123-secure-bucket-123456"
+#     key    = "terraform.tfstate"
+#     region = "us-east-1"
+#     encrypt = true
+#   }
+# }
 
 
 resource "aws_s3_bucket" "secure_bucket" {
