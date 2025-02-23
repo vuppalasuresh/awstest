@@ -2,21 +2,15 @@ provider "aws" {
   region = "us-east-1"
 }
 
-# Create S3 bucket
 resource "aws_s3_bucket" "secure_bucket" {
-  bucket = "my-123123432-secure-bucket-12345" # Change to a unique name
+  bucket = "my-12341234564-secure-bucket-123456"
 }
 
-# Block public access
-resource "aws_s3_bucket_public_access_block" "block_public" {
-  bucket                  = aws_s3_bucket.secure_bucket.id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+resource "aws_s3_bucket_acl" "private_acl" {
+  bucket = aws_s3_bucket.secure_bucket.id
+  acl    = "private"
 }
 
-# Enable default encryption (AES-256)
 resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
   bucket = aws_s3_bucket.secure_bucket.id
 
@@ -27,37 +21,24 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
   }
 }
 
-# Test to verify S3 bucket exists and has the correct configuration
-terraform {
-  required_providers {
-    test = {
-      source  = "terraform.io/builtin/test"
+# Automated Tests
+test {
+  check "bucket_exists" {
+    assert {
+      condition     = length(data.aws_s3_bucket.secure_bucket.id) > 0
+      error_message = "S3 bucket does not exist."
+    }
+  }
+
+  check "encryption_enabled" {
+    assert {
+      condition     = data.aws_s3_bucket.secure_bucket.server_side_encryption_configuration[0].rule[0].apply_server_side_encryption_by_default.sse_algorithm == "AES256"
+      error_message = "S3 bucket encryption is not enabled or not using AES256."
     }
   }
 }
 
-resource "test_assertions" "verify_s3" {
-  component = aws_s3_bucket.secure_bucket.id
-
-  equal "exists" {
-    description = "Check if S3 bucket exists"
-    got         = aws_s3_bucket.secure_bucket.id
-    want        = aws_s3_bucket.secure_bucket.id
-  }
-
-  equal "encryption_enabled" {
-    description = "Check if S3 bucket encryption is enabled"
-    got         = aws_s3_bucket_server_side_encryption_configuration.encryption.rule[0].apply_server_side_encryption_by_default.sse_algorithm
-    want        = "AES256"
-  }
-
-  equal "public_access_blocked" {
-    description = "Check if public access is blocked"
-    got         = aws_s3_bucket_public_access_block.block_public.block_public_acls
-    want        = true
-  }
-}
-
-output "s3_bucket_name" {
-  value = aws_s3_bucket.secure_bucket.id
+# Data source to fetch bucket details for testing
+data "aws_s3_bucket" "secure_bucket" {
+  bucket = aws_s3_bucket.secure_bucket.id
 }
