@@ -14,5 +14,5 @@ check "encryption_enabled" {
 
 # Data source to fetch bucket details for validation
 data "aws_s3_bucket" "secure_bucket" {
-  bucket = "my-9898989secure-bucket-123456"
+  bucket = "my-9898989-123-secure-bucket-123456"
 }
