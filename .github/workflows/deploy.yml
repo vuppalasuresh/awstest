@@ -1,113 +1,104 @@
+name: Build, Deploy, Terraform, and Test AWS Resources
+
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
+  workflow_dispatch:  # Allows manual trigger for destroy
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # Stage 1: Checkout Code
       - name: Checkout Code
         uses: actions/checkout@v2
-      - name: Build Docker Image
-        run: |
-          cd catgifs-master
-          docker build -t my-flask-app .
-      - name: Tag Docker Image
-        run: |
-          docker tag my-flask-app:latest 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app:latest
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
+      # Stage 2: Configure AWS Credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-region: us-east-1
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      # Stage 3: Docker login to Amazon ECR
       - name: Login to Amazon ECR
         run: |
           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app
-      - name: Push Docker Image
-        run: |
-          docker push 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app:latest
 
-  terraform_plan:
-    name: Terraform Plan
+      # Stage 4: Build Docker Image
+      - name: Build Docker Image
+        run: |
+          cd catgifs-master
+          docker build -t my-flask-app .
+
+      # Stage 5: Tag Docker Image
+      - name: Tag Docker Image
+        run: |
+          docker tag my-flask-app:latest 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app:latest
+
+  terraform:
+    needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
+      # Stage 1: Install Terraform
       - name: Install Terraform
         run: |
           curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo tee /etc/apt/trusted.gpg.d/hashicorp.asc
           echo "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
           sudo apt update
-          sudo apt install -y terraform
+          sudo apt install terraform
 
-      - name: Terraform Init
+      # Stage 2: Terraform Initialization
+      - name: Terraform Initialization
         run: |
           cd aws_terraform
           terraform init
 
-      - name: Terraform Plan
-        run: |
-          cd aws_terraform
-          terraform plan -input=false -no-color -out=tfplan
-
-      - name: Upload Terraform Plan Artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: tfplan
-          path: aws_terraform/tfplan
-
-  terraform_apply:
-    name: Terraform Apply
-    needs: terraform_plan
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Install Terraform
-        run: |
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo tee /etc/apt/trusted.gpg.d/hashicorp.asc
-          echo "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-          sudo apt update
-          sudo apt install -y terraform
-
-      - name: Download Terraform Plan Artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: tfplan
-
-      - name: Terraform Init
-        run: |
-          cd aws_terraform
-          terraform init
-
+      # Stage 3: Terraform Apply
       - name: Terraform Apply
         run: |
           cd aws_terraform
-          terraform apply -auto-approve tfplan
+          terraform apply -auto-approve
 
-  test:
+  deploy:
+    needs: terraform
     runs-on: ubuntu-latest
-    needs: terraform_plan
     steps:
+      # Stage 1: Checkout Code (Again to ensure the deploy stage has the latest code)
       - name: Checkout Code
         uses: actions/checkout@v2
+
+      # Stage 2: Configure AWS Credentials (Shared credentials)
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      # Stage 3: Docker Push to ECR
+      - name: Push Docker Image to ECR
+        run: |
+          docker push 058264462530.dkr.ecr.us-east-1.amazonaws.com/my-flask-app:latest
+
+  test:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      # Stage 1: Checkout Code (Again to ensure the test stage has the latest code)
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      # Stage 2: Install Python and Boto3
       - name: Install Python and Boto3
         run: |
           sudo apt update
           sudo apt install python3-pip
           pip3 install boto3
+
+      # Stage 3: Run S3 Bucket Configuration Tests
       - name: Run S3 Bucket Configuration Tests
         run: |
           cd tests
