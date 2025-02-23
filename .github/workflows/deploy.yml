@@ -99,16 +99,6 @@ jobs:
           cd aws_terraform
           terraform apply -auto-approve
 
-      - name: Install Python and Boto3
-        run: |
-          sudo apt update
-          sudo apt install python3-pip
-          pip3 install boto3
-
-      - name: Run S3 Bucket Configuration Tests
-        run: |
-          cd tests
-          python3 test_s3_configuration.py
 
   Test_S3_validate:
     runs-on: ubuntu-latest
